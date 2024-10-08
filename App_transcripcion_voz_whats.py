@@ -25,8 +25,11 @@ if archivo_ogg is not None:
     recognizer = sr.Recognizer()
 
     try:
-        # Usar audioread para manejar el archivo de audio
-        with audioread.audio_open(archivo_ogg) as f:
+        # Leer el archivo cargado en memoria como un flujo de bytes
+        archivo_bytes = archivo_ogg.read()
+
+        # Usar audioread para manejar el archivo de audio desde los bytes en memoria
+        with audioread.audio_open(io.BytesIO(archivo_bytes)) as f:
             wav_io = io.BytesIO()
             for buf in f:
                 wav_io.write(buf)
