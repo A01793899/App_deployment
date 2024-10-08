@@ -1,6 +1,5 @@
 import streamlit as st
 import speech_recognition as sr
-import audioread
 import io
 
 # Título de la aplicación
@@ -28,17 +27,13 @@ if archivo_ogg is not None:
         # Leer el archivo cargado en memoria como un flujo de bytes
         archivo_bytes = archivo_ogg.read()
 
-        # Usar audioread para manejar el archivo de audio desde los bytes en memoria
-        with audioread.audio_open(io.BytesIO(archivo_bytes)) as f:
-            wav_io = io.BytesIO()
-            for buf in f:
-                wav_io.write(buf)
-            wav_io.seek(0)
+        # Convertir el archivo a un formato compatible con speech_recognition
+        audio_file = io.BytesIO(archivo_bytes)
 
-        # Convertir el archivo de audio en datos para reconocimiento
-        with sr.AudioFile(wav_io) as source:
+        # Usar speech_recognition para manejar el archivo de audio desde los bytes
+        with sr.AudioFile(audio_file) as source:
             audio_data = recognizer.record(source)
-        
+
         # Usar Google API para la transcripción
         text = recognizer.recognize_google(audio_data, language="es-ES")
         st.write("Transcripción: ")
