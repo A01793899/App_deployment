@@ -1,6 +1,6 @@
 import streamlit as st
-from pydub import AudioSegment
 import speech_recognition as sr
+import audioread
 import io
 
 # Título de la aplicación
@@ -18,22 +18,21 @@ if archivo_ogg is not None:
     file_details = {"FileName": archivo_ogg.name, "FileType": archivo_ogg.type}
     st.write(file_details)
 
-    # Procesar el archivo .ogg y convertirlo a .wav en memoria
+    # Procesar el archivo de audio .ogg
     st.audio(archivo_ogg, format='audio/ogg')
-
-    # Leer el archivo OGG desde el objeto en memoria
-    audio = AudioSegment.from_ogg(archivo_ogg)
-
-    # Crear un buffer de memoria para almacenar el archivo WAV
-    wav_io = io.BytesIO()
-    audio.export(wav_io, format="wav")
-    wav_io.seek(0)  # Ir al principio del archivo para que pueda ser leído
 
     # Inicializar el reconocedor de voz
     recognizer = sr.Recognizer()
 
-    # Transcribir el archivo de audio desde el buffer en memoria
     try:
+        # Usar audioread para manejar el archivo de audio
+        with audioread.audio_open(archivo_ogg) as f:
+            wav_io = io.BytesIO()
+            for buf in f:
+                wav_io.write(buf)
+            wav_io.seek(0)
+
+        # Convertir el archivo de audio en datos para reconocimiento
         with sr.AudioFile(wav_io) as source:
             audio_data = recognizer.record(source)
         
@@ -46,7 +45,8 @@ if archivo_ogg is not None:
         st.write("Lo siento, no pude entender el audio.")
     except sr.RequestError as e:
         st.write(f"Error en la solicitud; {e}")
+    except Exception as e:
+        st.write(f"Ocurrió un error al procesar el archivo de audio: {e}")
 
 else:
     st.write("Por favor, carga un archivo de audio.")
-
